@@ -26,14 +26,18 @@ window.addEventListener('DOMContentLoaded', () => {
 // --- NAVEGACIÓN Y UTILIDADES ---
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
+const navLinks = document.querySelectorAll('.nav-link');
 
 hamburger.addEventListener('click', () => {
     navMenu.classList.toggle('active');
 });
 
-document.querySelectorAll('.nav-link').forEach(link => {
+navLinks.forEach(link => {
     link.addEventListener('click', () => {
         navMenu.classList.remove('active');
+        // La función de scroll ya está en el HTML, esto es para el estado activo
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
     });
 });
 
@@ -103,7 +107,7 @@ const scenarios = [
         ]
     },
     {
-        type: 'planter-game', // <-- NUEVO MINIJUEGO
+        type: 'planter-game',
         icon: "fa-tree",
         title: "Reforestación Rápida",
         description: "El planeta necesita más árboles. ¡Plantá todos los que puedas en 15 segundos haciendo clic en la tierra!",
@@ -446,6 +450,50 @@ function updateProgress() {
 }
 
 // =================================================================================
+// --- ANIMACIÓN DE DATOS REALES ---
+// =================================================================================
+function animateRealData() {
+    const counters = document.querySelectorAll('.real-data-number');
+    const speed = 200; // Velocidad de la animación
+
+    counters.forEach(counter => {
+        const updateCount = () => {
+            const target = +counter.getAttribute('data-target');
+            const count = +counter.innerText;
+
+            const inc = target / speed;
+
+            if (count < target) {
+                const newCount = count + inc;
+                // Manejar decimales para números como 1.15
+                if (target.toString().includes('.')) {
+                    counter.innerText = newCount.toFixed(2);
+                } else {
+                    counter.innerText = Math.ceil(newCount);
+                }
+                setTimeout(updateCount, 10);
+            } else {
+                counter.innerText = target;
+            }
+        };
+        updateCount();
+    });
+}
+
+const realDataSection = document.getElementById('real-data');
+const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            animateRealData();
+            observer.unobserve(entry.target); // Para que la animación se ejecute solo una vez
+        }
+    });
+}, { threshold: 0.5 }); // Se dispara cuando el 50% de la sección es visible
+
+observer.observe(realDataSection);
+
+
+// =================================================================================
 // --- GRÁFICOS (Chart.js) ---
 // =================================================================================
 function renderCharts() {
@@ -460,19 +508,19 @@ function renderCharts() {
 
     new Chart(document.getElementById('water-chart').getContext('2d'), {
         type: 'pie',
-        data: { labels: ['Doméstico', 'Agricultura', 'Industria'], datasets: [{ data: [10, 70, 20], backgroundColor: ['#3498db', '#2ecc71', '#f1c40f'], borderWidth: 0 }] },
+        data: { labels: ['Agricultura', 'Industria', 'Doméstico'], datasets: [{ data: [70, 20, 10], backgroundColor: ['#2ecc71', '#f1c40f', '#3498db'], borderWidth: 0 }] },
         options: chartOptions
     });
 
     new Chart(document.getElementById('energy-chart').getContext('2d'), {
         type: 'bar',
-        data: { labels: ['Fósiles', 'Renovables', 'Nuclear'], datasets: [{ label: 'Consumo (GWh)', data: [65, 25, 10], backgroundColor: ['#e74c3c', '#2ecc71', '#f39c12'] }] },
+        data: { labels: ['Fósiles', 'Renovables', 'Nuclear'], datasets: [{ label: 'Generación Global', data: [75, 20, 5], backgroundColor: ['#e74c3c', '#2ecc71', '#f39c12'] }] },
         options: { ...chartOptions, scales: { y: { beginAtZero: true, ticks: { color: '#bdc3c7' } }, x: { ticks: { color: '#bdc3c7' } } } }
     });
 
     new Chart(document.getElementById('recycle-chart').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: ['Reciclado', 'No Reciclado'], datasets: [{ data: [35, 65], backgroundColor: ['#2ecc71', '#e74c3c'], borderWidth: 0 }] },
+        data: { labels: ['Desechado', 'Incinerado', 'Reciclado'], datasets: [{ data: [55, 25, 20], backgroundColor: ['#c0392b', '#f39c12', '#2ecc71'], borderWidth: 0 }] },
         options: { ...chartOptions, cutout: '70%' }
     });
 }

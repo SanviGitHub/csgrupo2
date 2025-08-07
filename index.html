@@ -40,9 +40,10 @@
                     <span>EcoGame</span>
                 </div>
                 <ul class="nav-menu">
-                    <li><a href="#home" class="nav-link active">Inicio</a></li>
-                    <li><a href="#game" class="nav-link">Juego</a></li>
-                    <li><a href="#stats" class="nav-link">Datos</a></li>
+                    <li><a href="#home" class="nav-link active" onclick="scrollToSection('home')">Inicio</a></li>
+                    <li><a href="#game" class="nav-link" onclick="scrollToSection('game')">Juego</a></li>
+                    <li><a href="#real-data" class="nav-link" onclick="scrollToSection('real-data')">Datos Reales</a></li>
+                    <li><a href="#stats" class="nav-link" onclick="scrollToSection('stats')">Estadísticas</a></li>
                 </ul>
                 <div class="hamburger">
                     <i class="fas fa-bars"></i>
@@ -62,8 +63,8 @@
                             <button class="btn btn-primary" onclick="scrollToSection('game')">
                                 <i class="fas fa-play"></i> Empezar Desafío
                             </button>
-                            <button class="btn btn-secondary" onclick="scrollToSection('stats')">
-                                <i class="fas fa-chart-line"></i> Ver Estadísticas
+                            <button class="btn btn-secondary" onclick="scrollToSection('real-data')">
+                                <i class="fas fa-chart-line"></i> Ver Datos Reales
                             </button>
                         </div>
                     </div>
@@ -120,28 +121,63 @@
                     </div>
                 </div>
             </section>
+            
+            <!-- NUEVA SECCIÓN: DATOS REALES -->
+            <section id="real-data" class="real-data-section">
+                <div class="container">
+                    <h2 class="section-title">Planeta en <span>Cifras</span></h2>
+                    <p class="section-subtitle">Datos impactantes sobre el consumo y los residuos en Argentina. Cada número cuenta una historia.</p>
+                    <div class="real-data-grid">
+                        <div class="real-data-card glass-card">
+                            <i class="fas fa-trash-alt"></i>
+                            <h3 class="real-data-number" data-target="1.15">0</h3>
+                            <h4>Kilos de basura</h4>
+                            <p>Generados por persona, por día, en promedio en nuestro país.</p>
+                        </div>
+                        <div class="real-data-card glass-card">
+                            <i class="fas fa-recycle"></i>
+                            <h3 class="real-data-number" data-target="6">0</h3>
+                            <h4>Porciento</h4>
+                            <p>Es la tasa de residuos que se recuperan y reciclan a nivel nacional.</p>
+                        </div>
+                        <div class="real-data-card glass-card">
+                            <i class="fas fa-tint"></i>
+                            <h3 class="real-data-number" data-target="250">0</h3>
+                            <h4>Litros de agua</h4>
+                            <p>Es el consumo promedio diario por habitante en algunas de las principales ciudades.</p>
+                        </div>
+                         <div class="real-data-card glass-card">
+                            <i class="fas fa-plug"></i>
+                            <h3 class="real-data-number" data-target="5">0</h3>
+                            <h4>Porciento</h4>
+                            <p>Del consumo eléctrico de un hogar puede ser por "consumo fantasma".</p>
+                        </div>
+                    </div>
+                    <p class="data-source">Fuente: Ministerio de Ambiente y Desarrollo Sostenible, AySA, y estudios universitarios (UBA).</p>
+                </div>
+            </section>
 
-            <!-- Sección de Estadísticas -->
+            <!-- Sección de Estadísticas (Gráficos) -->
             <section id="stats" class="stats-section">
                 <div class="container">
-                    <h2 class="section-title">Datos de <span>Impacto</span></h2>
-                    <p class="section-subtitle">Visualizá cómo el consumo responsable moldea nuestra comunidad.</p>
+                    <h2 class="section-title">Datos de <span>Impacto Global</span></h2>
+                    <p class="section-subtitle">Visualizá cómo el consumo responsable moldea nuestra comunidad y el mundo.</p>
                     <div class="stats-grid">
                         <div class="stat-card glass-card">
                             <div class="stat-header">
-                                <i class="fas fa-tint"></i><h3>Consumo de Agua</h3>
+                                <i class="fas fa-tint"></i><h3>Uso del Agua Mundial</h3>
                             </div>
                             <div class="chart-container"><canvas id="water-chart"></canvas></div>
                         </div>
                         <div class="stat-card glass-card">
                             <div class="stat-header">
-                                <i class="fas fa-bolt-lightning"></i><h3>Gasto Energético</h3>
+                                <i class="fas fa-bolt-lightning"></i><h3>Fuentes de Energía</h3>
                             </div>
                             <div class="chart-container"><canvas id="energy-chart"></canvas></div>
                         </div>
                         <div class="stat-card glass-card">
                             <div class="stat-header">
-                                <i class="fas fa-recycle"></i><h3>Tasa de Reciclaje</h3>
+                                <i class="fas fa-recycle"></i><h3>Destino de los Plásticos</h3>
                             </div>
                             <div class="chart-container"><canvas id="recycle-chart"></canvas></div>
                         </div>
