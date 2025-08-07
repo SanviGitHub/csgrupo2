@@ -35,7 +35,6 @@ hamburger.addEventListener('click', () => {
 navLinks.forEach(link => {
     link.addEventListener('click', () => {
         navMenu.classList.remove('active');
-        // La función de scroll ya está en el HTML, esto es para el estado activo
         navLinks.forEach(l => l.classList.remove('active'));
         link.classList.add('active');
     });
@@ -57,18 +56,29 @@ const sounds = {
     correct: 'C5',
     incorrect: 'G3',
     click: 'C4',
-    plant: 'E4'
+    plant: 'E4',
+    flip: 'A4',
+    leak: 'D3'
 };
 function playSound(sound) {
-    if (window.Tone) {
+    if (window.Tone && sounds[sound] && Tone.context.state === 'running') {
         synth.triggerAttackRelease(sounds[sound], "8n");
     }
 }
 
+// --- UTILIDAD PARA MEZCLAR ARRAYS ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Intercambio de elementos
+    }
+}
+
+
 // =================================================================================
 // --- ESTRUCTURA DE LOS MINIJUEGOS ---
 // =================================================================================
-const scenarios = [
+let scenarios = [
     {
         type: 'quiz',
         icon: "fa-shower",
@@ -110,8 +120,8 @@ const scenarios = [
         type: 'planter-game',
         icon: "fa-tree",
         title: "Reforestación Rápida",
-        description: "El planeta necesita más árboles. ¡Plantá todos los que puedas en 9 segundos haciendo clic en la tierra!",
-        duration: 9
+        description: "El planeta necesita más árboles. ¡Plantá todos los que puedas en 15 segundos haciendo clic en la tierra!",
+        duration: 15
     },
     {
         type: 'quiz',
@@ -122,6 +132,24 @@ const scenarios = [
             { text: "Lo desenchufo de la pared", effect: { eco: 5, water: 0, energy: 5 }, correct: true, feedback: "¡Muy bien! Así se evita el consumo 'fantasma' de energía." },
             { text: "Lo dejo enchufado, es más cómodo", effect: { eco: -5, water: 0, energy: -10 }, correct: false, feedback: "Aunque no esté cargando, sigue consumiendo un poco de energía." }
         ]
+    },
+    // --- NUEVO MINIJUEGO: MEMORY MATCH ---
+    {
+        type: 'memory-match',
+        icon: "fa-brain",
+        title: "Eco Pares",
+        description: "Encontrá los pares de íconos ecológicos. ¡Un cerebro sano en un planeta sano!",
+        pairs: 6, // Número de pares a encontrar
+        icons: ['fa-leaf', 'fa-solar-panel', 'fa-wind', 'fa-bicycle', 'fa-recycle', 'fa-lightbulb']
+    },
+    // --- NUEVO MINIJUEGO: LEAK FIXER ---
+    {
+        type: 'leak-fixer',
+        icon: "fa-faucet-drip",
+        title: "¡Fuga de Agua!",
+        description: "¡Oh no, hay fugas! Hacé clic en las tuberías que gotean para repararlas antes de que se pierda mucha agua.",
+        duration: 20,
+        baseWaterLoss: 2, // Agua perdida por segundo por cada fuga
     }
 ];
 
@@ -129,6 +157,7 @@ const scenarios = [
 // --- LÓGICA CENTRAL DEL JUEGO ---
 // =================================================================================
 let gameState = {};
+let activeScenarios = [];
 const elements = {
     eco: document.getElementById('eco-points'),
     water: document.getElementById('water-level'),
@@ -146,8 +175,14 @@ function initGame() {
     renderIntro();
 }
 
-function startGame() {
+async function startGame() {
+    // CORRECCIÓN: Iniciar el contexto de audio con un gesto del usuario
+    if (Tone.context.state !== 'running') {
+        await Tone.start();
+    }
     playSound('click');
+    activeScenarios = [...scenarios]; // Copia los escenarios originales
+    shuffleArray(activeScenarios); // Mezcla el orden para esta partida
     gameState.current = 0;
     gameState.completed = false;
     renderScenario();
@@ -166,11 +201,11 @@ function renderIntro() {
 
 // --- Router principal que renderiza el minijuego correspondiente ---
 function renderScenario() {
-    if (gameState.current >= scenarios.length) {
+    if (gameState.current >= activeScenarios.length) {
         renderGameEnd();
         return;
     }
-    const scenario = scenarios[gameState.current];
+    const scenario = activeScenarios[gameState.current];
     elements.scenarioCard.style.opacity = 0;
 
     setTimeout(() => {
@@ -180,6 +215,8 @@ function renderScenario() {
             case 'drag-drop-recycle': renderRecycleGame(scenario); break;
             case 'planter-game': renderPlanterGame(scenario); break;
             case 'lights-out': renderLightsOutGame(scenario); break;
+            case 'memory-match': renderMemoryGame(scenario); break; // NUEVA LLAMADA
+            case 'leak-fixer': renderLeakFixerGame(scenario); break; // NUEVA LLAMADA
         }
         elements.scenarioCard.style.opacity = 1;
     }, 400);
@@ -283,7 +320,18 @@ function renderPlanterGame(scenario) {
     let timeLeft = scenario.duration;
     let treesPlanted = 0;
     let gameActive = true;
-    const intervals = [];
+    
+    const gameTimer = setInterval(() => {
+        if (!gameActive) {
+            clearInterval(gameTimer);
+            return;
+        }
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+            endGame();
+        }
+    }, 1000);
 
     for (let i = 0; i < 24; i++) { // Create a 6x4 grid
         const plot = document.createElement('div');
@@ -300,23 +348,12 @@ function renderPlanterGame(scenario) {
 
     const endGame = () => {
         gameActive = false;
-        intervals.forEach(clearInterval);
-        
+        clearInterval(gameTimer);
         const ecoPointsGained = treesPlanted; // 1 tree = 1 eco point
         const effect = { eco: ecoPointsGained, water: 0, energy: 0 };
         const feedbackText = `¡Tiempo! Lograste plantar ${treesPlanted} árboles. ¡El planeta te lo agradece!`;
-        
         completeMinigame(effect, { text: feedbackText, correct: treesPlanted > 10 });
     };
-
-    intervals.push(setInterval(() => {
-        if (!gameActive) return;
-        timeLeft--;
-        timerEl.textContent = timeLeft;
-        if (timeLeft <= 0) {
-            endGame();
-        }
-    }, 1000));
 }
 
 
@@ -332,6 +369,7 @@ function renderLightsOutGame(scenario) {
     const timerEl = elements.scenarioCard.querySelector('.faucet-timer');
     let timeLeft = scenario.duration;
     let lightsOff = 0;
+    let gameActive = true;
     
     for (let i = 0; i < 9; i++) {
         const switchEl = document.createElement('div');
@@ -339,7 +377,7 @@ function renderLightsOutGame(scenario) {
         switchEl.dataset.id = i;
         switchEl.innerHTML = `<i class="fas fa-lightbulb"></i>`;
         switchEl.onclick = () => {
-            if (switchEl.classList.contains('on')) {
+            if (switchEl.classList.contains('on') && gameActive) {
                 playSound('click');
                 lightsOff++;
                 switchEl.classList.remove('on');
@@ -350,20 +388,160 @@ function renderLightsOutGame(scenario) {
 
     const switches = container.querySelectorAll('.light-switch');
     const gameInterval = setInterval(() => {
+        if (!gameActive) return;
         const randomIndex = Math.floor(Math.random() * switches.length);
-        switches[randomIndex].classList.add('on');
+        if (!switches[randomIndex].classList.contains('on')) {
+            switches[randomIndex].classList.add('on');
+        }
     }, 700);
     
     const timerInterval = setInterval(() => {
+        if (!gameActive) return;
         timeLeft--;
         timerEl.textContent = timeLeft;
         if (timeLeft <= 0) {
+            gameActive = false;
             clearInterval(gameInterval);
             clearInterval(timerInterval);
-            const energyLost = Math.round(scenario.baseEnergyLoss * (1 - (lightsOff / 15))); // Estimación
-            const effect = { eco: 0, water: 0, energy: -energyLost };
+            const lightsLeftOn = container.querySelectorAll('.light-switch.on').length;
+            const energyLost = Math.round(scenario.baseEnergyLoss * (lightsLeftOn / 5)); // Estimación
+            const effect = { eco: lightsOff, water: 0, energy: -energyLost };
             const feedbackText = `¡Se acabó el tiempo! Apagaste ${lightsOff} luces.`;
             completeMinigame(effect, { text: feedbackText, correct: lightsOff > 10 });
+        }
+    }, 1000);
+}
+
+// --- RENDERIZADOR MEMORY GAME (CON SONIDO DESACTIVADO) ---
+function renderMemoryGame(scenario) {
+    elements.scenarioCard.innerHTML = `
+        <div class="scenario-image"><i class="fas ${scenario.icon}"></i></div>
+        <h3>${scenario.title}</h3>
+        <p>${scenario.description}</p>
+        <div class="memory-game-container"></div>`;
+    
+    const container = elements.scenarioCard.querySelector('.memory-game-container');
+    let cards = [];
+    scenario.icons.forEach(icon => {
+        cards.push({ icon: icon, id: Math.random() });
+        cards.push({ icon: icon, id: Math.random() });
+    });
+    shuffleArray(cards);
+
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let attempts = 0;
+    let canFlip = true;
+
+    cards.forEach(cardData => {
+        const card = document.createElement('div');
+        card.className = 'memory-card';
+        card.dataset.icon = cardData.icon;
+        card.innerHTML = `
+            <div class="card-inner">
+                <div class="card-front"><i class="fas fa-leaf"></i></div>
+                <div class="card-back"><i class="fas ${cardData.icon}"></i></div>
+            </div>
+        `;
+        container.appendChild(card);
+
+        card.addEventListener('click', () => {
+            if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            
+            // playSound('flip'); // Sonido removido para evitar bugs
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                canFlip = false;
+                attempts++;
+                const [card1, card2] = flippedCards;
+                
+                if (card1.dataset.icon === card2.dataset.icon) {
+                    // Match
+                    // playSound('correct'); // Sonido removido para evitar bugs
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    matchedPairs++;
+                    flippedCards = [];
+                    canFlip = true;
+
+                    if (matchedPairs === scenario.pairs) {
+                        const ecoPoints = Math.max(5, 20 - attempts); // More points for fewer attempts
+                        completeMinigame({ eco: ecoPoints, water: 0, energy: 0 }, { text: `¡Genial! Encontraste todos los pares en ${attempts} intentos.`, correct: true });
+                    }
+                } else {
+                    // No match
+                    // playSound('incorrect'); // Sonido removido para evitar bugs
+                    setTimeout(() => {
+                        card1.classList.remove('flipped');
+                        card2.classList.remove('flipped');
+                        flippedCards = [];
+                        canFlip = true;
+                    }, 1200);
+                }
+            }
+        });
+    });
+}
+
+// --- NUEVO RENDERIZADOR: LEAK FIXER GAME ---
+function renderLeakFixerGame(scenario) {
+    elements.scenarioCard.innerHTML = `
+        <div class="scenario-image"><i class="fas ${scenario.icon}"></i></div>
+        <h3>${scenario.title}</h3>
+        <p>${scenario.description}</p>
+        <div class="faucet-timer">${scenario.duration}</div>
+        <div class="leak-fixer-container"></div>`;
+    
+    const container = elements.scenarioCard.querySelector('.leak-fixer-container');
+    const timerEl = elements.scenarioCard.querySelector('.faucet-timer');
+    let timeLeft = scenario.duration;
+    let leaksFixed = 0;
+    let waterLost = 0;
+    let gameActive = true;
+
+    for(let i = 0; i < 16; i++) {
+        const pipe = document.createElement('div');
+        pipe.className = 'pipe-section';
+        pipe.innerHTML = '<i class="fas fa-plus"></i><span class="leak-effect">💧</span>';
+        pipe.addEventListener('click', () => {
+            if (pipe.classList.contains('leaking') && gameActive) {
+                playSound('click');
+                pipe.classList.remove('leaking');
+                leaksFixed++;
+            }
+        });
+        container.appendChild(pipe);
+    }
+
+    const pipes = container.querySelectorAll('.pipe-section');
+    
+    const leakInterval = setInterval(() => {
+        if (!gameActive) return;
+        const randomIndex = Math.floor(Math.random() * pipes.length);
+        if (!pipes[randomIndex].classList.contains('leaking')) {
+            pipes[randomIndex].classList.add('leaking');
+            playSound('leak');
+        }
+    }, 1500);
+
+    const timerInterval = setInterval(() => {
+        if (!gameActive) return;
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+
+        const currentLeaks = container.querySelectorAll('.pipe-section.leaking').length;
+        waterLost += currentLeaks * scenario.baseWaterLoss;
+
+        if (timeLeft <= 0) {
+            gameActive = false;
+            clearInterval(leakInterval);
+            clearInterval(timerInterval);
+            
+            const effect = { eco: leaksFixed, water: -Math.round(waterLost / 5), energy: 0 };
+            const feedbackText = `¡Tiempo! Reparaste ${leaksFixed} fugas. ¡Cada gota cuenta!`;
+            completeMinigame(effect, { text: feedbackText, correct: leaksFixed > 5 });
         }
     }, 1000);
 }
@@ -445,7 +623,7 @@ function updateStats() {
 function updateProgress() {
     const progress = gameState.completed ? gameState.current : gameState.current;
     elements.progressNumber.textContent = progress;
-    elements.progressFill.style.width = `${(progress / scenarios.length) * 100}%`;
+    elements.progressFill.style.width = `${(progress / activeScenarios.length) * 100}%`;
     updateStats();
 }
 
@@ -465,7 +643,6 @@ function animateRealData() {
 
             if (count < target) {
                 const newCount = count + inc;
-                // Manejar decimales para números como 1.15
                 if (target.toString().includes('.')) {
                     counter.innerText = newCount.toFixed(2);
                 } else {
@@ -485,18 +662,21 @@ const observer = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             animateRealData();
-            observer.unobserve(entry.target); // Para que la animación se ejecute solo una vez
+            observer.unobserve(entry.target);
         }
     });
-}, { threshold: 0.5 }); // Se dispara cuando el 50% de la sección es visible
+}, { threshold: 0.5 });
 
-observer.observe(realDataSection);
+if (realDataSection) {
+    observer.observe(realDataSection);
+}
 
 
 // =================================================================================
 // --- GRÁFICOS (Chart.js) ---
 // =================================================================================
 function renderCharts() {
+    if (typeof Chart === 'undefined') return;
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.color = '#bdc3c7';
 
@@ -527,8 +707,6 @@ function renderCharts() {
 
 // --- INICIALIZACIÓN ---
 window.addEventListener('load', () => {
-    if(typeof Chart !== 'undefined') {
-        renderCharts();
-    }
+    renderCharts();
     initGame();
 });
