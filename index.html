@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoGame Reloaded - Desafío Ambiental</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Pantalla de Carga -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-container">
+            <div class="eco-logo">
+                <i class="fas fa-leaf"></i>
+                <span>EcoGame</span>
+            </div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p class="loading-text">Preparando un futuro más verde...</p>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div id="main-content" class="main-content hidden">
+        <header class="header">
+            <nav class="navbar container">
+                <div class="nav-brand">
+                    <i class="fas fa-leaf"></i>
+                    <span>EcoGame</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#home" class="nav-link active">Inicio</a></li>
+                    <li><a href="#game" class="nav-link">Juego</a></li>
+                    <li><a href="#stats" class="nav-link">Datos</a></li>
+                </ul>
+                <div class="hamburger">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Sección Hero -->
+            <section id="home" class="hero">
+                <div class="hero-background"></div>
+                <div class="container hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">Tu Aventura Ecológica Comienza Ahora</h1>
+                        <p class="hero-subtitle">Descubrí cómo tus pequeñas acciones diarias generan un gran impacto. ¡Jugá, aprendé y transformá el mundo!</p>
+                        <div class="hero-buttons">
+                            <button class="btn btn-primary" onclick="scrollToSection('game')">
+                                <i class="fas fa-play"></i> Empezar Desafío
+                            </button>
+                            <button class="btn btn-secondary" onclick="scrollToSection('stats')">
+                                <i class="fas fa-chart-line"></i> Ver Estadísticas
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <i class="fas fa-earth-americas"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección del Juego -->
+            <section id="game" class="game-section">
+                <div class="container">
+                    <h2 class="section-title"><span>Eco</span>Challenge</h2>
+                    <p class="section-subtitle">Tus decisiones definen el futuro. ¿Estás listo?</p>
+                    
+                    <div class="game-area">
+                        <!-- Panel de Estadísticas -->
+                        <div class="game-stats-panel">
+                            <div class="stat-item">
+                                <i class="fas fa-seedling" style="color: #2ecc71;"></i>
+                                <div class="stat-info">
+                                    <span>Puntos Eco</span>
+                                    <strong id="eco-points">100</strong>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-tint" style="color: #3498db;"></i>
+                                <div class="stat-info">
+                                    <span>Agua</span>
+                                    <strong id="water-level">100%</strong>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-bolt-lightning" style="color: #f1c40f;"></i>
+                                <div class="stat-info">
+                                    <span>Energía</span>
+                                    <strong id="energy-level">100%</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tablero de Juego -->
+                        <div class="game-board glass-card">
+                            <div class="game-progress">
+                                <span class="progress-text">Progreso: <span id="progress-number">0</span> / <span id="progress-total">10</span></span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="game-progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="scenario-card" id="scenario-card">
+                                <!-- El contenido del minijuego se insertará aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Estadísticas -->
+            <section id="stats" class="stats-section">
+                <div class="container">
+                    <h2 class="section-title">Datos de <span>Impacto</span></h2>
+                    <p class="section-subtitle">Visualizá cómo el consumo responsable moldea nuestra comunidad.</p>
+                    <div class="stats-grid">
+                        <div class="stat-card glass-card">
+                            <div class="stat-header">
+                                <i class="fas fa-tint"></i><h3>Consumo de Agua</h3>
+                            </div>
+                            <div class="chart-container"><canvas id="water-chart"></canvas></div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-header">
+                                <i class="fas fa-bolt-lightning"></i><h3>Gasto Energético</h3>
+                            </div>
+                            <div class="chart-container"><canvas id="energy-chart"></canvas></div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-header">
+                                <i class="fas fa-recycle"></i><h3>Tasa de Reciclaje</h3>
+                            </div>
+                            <div class="chart-container"><canvas id="recycle-chart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2024 EcoGame Reloaded. Creado con 💚 por estudiantes para un futuro sostenible.</p>
+                <p class="credits">Desarrollado por Santino Viana y el 2do grupo (1ro 4ta)</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Librerías JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
