@@ -110,8 +110,8 @@ const scenarios = [
         type: 'planter-game',
         icon: "fa-tree",
         title: "Reforestación Rápida",
-        description: "El planeta necesita más árboles. ¡Plantá todos los que puedas en 15 segundos haciendo clic en la tierra!",
-        duration: 15
+        description: "El planeta necesita más árboles. ¡Plantá todos los que puedas en 9 segundos haciendo clic en la tierra!",
+        duration: 9
     },
     {
         type: 'quiz',
